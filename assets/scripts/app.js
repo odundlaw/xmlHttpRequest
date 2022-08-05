@@ -4,7 +4,7 @@ const form = document.querySelector("#new-post form");
 const fetchBtn = document.querySelector("#available-posts button");
 
 async function httpRequest(method, url, data) {
-  const promise = new Promise((resolve, reject) => {
+  /* const promise = new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open(method, url);
 
@@ -18,16 +18,28 @@ async function httpRequest(method, url, data) {
       reject(xhr.response);
     };
   });
+ */
 
-  return promise;
+  const response = await fetch(url, {
+    method: method ? method : "GET",
+    body: data ? JSON.stringify(data) : null,
+  });
+  return response;
 }
 
 async function fetchPosts() {
   try {
-    const postData = await httpRequest(
+    const response = await httpRequest(
       "GET",
       "https://jsonplaceholder.typicode.com/posts"
     );
+
+    if (response.statusCode < 200 || response.statusCode > 201) {
+      const errorData = await response.json();
+      throw new Error(errorData.message);
+    }
+
+    const postData = await response.json();
 
     for (const post of postData) {
       const template = document.importNode(postTemplate.content, true);
@@ -68,9 +80,9 @@ async function deletePost(postId) {
 fetchBtn.addEventListener("click", fetchPosts);
 
 listItem.addEventListener("click", (event) => {
-  if(event.target.textContent === "DELETE"){
+  if (event.target.textContent === "DELETE") {
     const id = event.target.closest("li").id;
-    deletePost(id)
+    deletePost(id);
   }
 });
 
